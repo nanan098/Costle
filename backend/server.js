@@ -1,0 +1,70 @@
+const express = require("express");
+const app = express();
+const cors = require("cors");
+app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Pozwól na żądania tylko z Twojego frontendu
+    methods: ["GET", "POST"], // Określ dozwolone metody
+    allowedHeaders: ["Content-Type"], // I nagłówki
+  }),
+);
+
+const Product = require("./product");
+const GuessLogic = require("./guessLogic");
+
+const mockProduct = {
+  "2026-05-17": {
+    id: 1,
+    name: "Majonez (1L)",
+    image: "majo.png",
+    price: 7.5,
+  },
+};
+
+app.get("/api/health", (req, res) => {
+  res.json({ status: "OK" });
+});
+
+// 1. Pobieranie danych o produkcie dnia
+app.post("/api/product", (req, res) => {
+  const dateProduct = req.body.date;
+  if (mockProduct[dateProduct]) {
+    const { id, name, image } = mockProduct[dateProduct];
+    res.json({
+      id: id,
+      name: name,
+      image: image,
+    });
+  } else {
+    res.status(404).json({ error: "Produkt nie znaleziony dla tej daty" });
+  }
+});
+
+// 2. Logika sprawdzania strzału
+app.post("/api/guess", (req, res) => {
+  const { date, guess } = req.body;
+  if (!mockProduct[date]) {
+    return res
+      .status(404)
+      .json({ error: "Produkt nie znaleziony dla tej daty" });
+  }
+  const productData = mockProduct[date];
+  const productInstance = new Product(
+    productData.id,
+    productData.name,
+    productData.image,
+    productData.price,
+  );
+  const { minYellow, maxYellow } = productInstance.scopeYellowGuess();
+  const guessLogicInstance = new GuessLogic(
+    productData.price,
+    minYellow,
+    maxYellow,
+  );
+  const result = guessLogicInstance.checkGuess(guess);
+  res.json(result);
+});
+
+const PORT = 8080;
+app.listen(PORT, () => console.log(`Backend działa na porcie ${PORT}`));

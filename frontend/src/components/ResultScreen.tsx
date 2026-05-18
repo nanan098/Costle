@@ -4,13 +4,15 @@ import type { Attempt } from "../types";
 import { handleShare } from "../tools/handleShare";
 import { directionalLabel } from "./directionalLabel";
 
-export const VictoryScreen: React.FC<{
+export const ResultScreen: React.FC<{
   attempts: Attempt[];
+  isWin: boolean;
+  targetPrice?: number;
   onClose: () => void;
-}> = ({ attempts, onClose }) => {
+}> = ({ attempts, isWin, targetPrice, onClose }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-lg p-4 overflow-auto">
-      <div className="relative w-full max-w-md rounded-4xl border border-white/30 bg-white/95 p-6 shadow-2xl shadow-black/30 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex min-h-full items-center justify-center bg-black/40 backdrop-blur-lg overflow-y-auto">
+      <div className="relative w-full max-w-md rounded-4xl border border-white/30 bg-white/95 p-6 shadow-2xl shadow-black/30 m-4">
         <button
           type="button"
           onClick={onClose}
@@ -19,21 +21,44 @@ export const VictoryScreen: React.FC<{
           ✕
         </button>
         <div className="text-center">
-          <h2 className="mt-2 text-3xl font-bold text-akcent">Klasa</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Udało się zgadnąć produkt w {attempts.length} strzałach.
-          </p>
+          {isWin ? (
+            <>
+              <h2 className="mt-2 text-3xl font-bold text-akcent">Klasa</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                Udało się zgadnąć produkt w {attempts.length}{" "}
+                {attempts.length === 1 ? "strzale" : "strzałach"}.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="mt-2 text-3xl font-bold text-red-600">
+                Nie tym razem
+              </h2>
+              {typeof targetPrice === "number" && (
+                <div className="mt-3 text-center mb-4">
+                  <p className="mt-3 text-xl font-semibold text-slate-800">
+                    Prawidłowa cena to:
+                  </p>
+                  <span className="font-bold text-glowny text-3xl">
+                    {targetPrice.toFixed(2)} zł.
+                  </span>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
-        <div className="my-6">
-          <button
-            type="button"
-            onClick={() => handleShare(attempts)}
-            className="w-full bg-akcent hover:bg-akcent/90 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg shadow-glowny/30 text-sm tracking-wide uppercase"
-          >
-            <Share2 size={18} /> Udostępnij wynik
-          </button>
-        </div>
+        {isWin && (
+          <div className="my-6">
+            <button
+              type="button"
+              onClick={() => handleShare(attempts)}
+              className="w-full bg-akcent hover:bg-akcent/90 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg shadow-glowny/30 text-sm tracking-wide uppercase"
+            >
+              <Share2 size={18} /> Udostępnij wynik
+            </button>
+          </div>
+        )}
 
         <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
           <div className="mb-3 flex items-center justify-between text-sm font-semibold text-slate-600">

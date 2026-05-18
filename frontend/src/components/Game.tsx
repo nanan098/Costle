@@ -1,16 +1,19 @@
 import { Share2 } from "lucide-react";
 import React, { useState } from "react";
-import { VictoryScreen } from "./VictoryScreen";
+import { ResultScreen } from "./ResultScreen";
 import { AttemptsBoard } from "./AttemptsBoard";
 import type { Attempt } from "../types";
+import { handleShare } from "../tools/handleShare";
 
 export const Game: React.FC = () => {
   const [guess, setGuess] = useState<string>("");
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [isGameOver, setIsGameOver] = useState(false);
+  const [showResultScreen, setShowResultScreen] = useState(false);
   const [name, setName] = useState<string>();
   const [image, setImage] = useState<string>();
-  const [date] = useState<string>("2026-05-17");
+  const [targetPrice, setTargetPrice] = useState<number | undefined>(undefined);
+  const [date] = useState<string>("2026-05-18");
   const hasWon = attempts.some((attempt) => attempt.status === "green");
 
   // Pobiera obraz i nazwę produktu dnia z backendu
@@ -39,6 +42,7 @@ export const Game: React.FC = () => {
       body: JSON.stringify({
         date: date,
         guess: price,
+        attemptNumber: attempts.length + 1,
       }),
     })
       .then((response) => {
@@ -46,13 +50,21 @@ export const Game: React.FC = () => {
         return response.json();
       })
       .then((data) => {
+        const nextAttempts = [data, ...attempts];
+        setAttempts(nextAttempts);
+        if (typeof data.correctPrice === "number") {
+          setTargetPrice(data.correctPrice);
+        }
+
         if (data.status === "green") {
-          setAttempts([data, ...attempts]);
           setIsGameOver(true);
+          setShowResultScreen(true);
         } else {
-          setAttempts([data, ...attempts]);
           setGuess("");
-          if (attempts.length >= 5) setIsGameOver(true);
+          if (nextAttempts.length >= 5) {
+            setIsGameOver(true);
+            setShowResultScreen(true);
+          }
         }
       })
       .catch((error) => {
@@ -65,8 +77,8 @@ export const Game: React.FC = () => {
     handleGuess();
   };
 
-  const handleCloseVictory = () => {
-    setIsGameOver(false);
+  const handleCloseResult = () => {
+    setShowResultScreen(false);
   };
 
   return (
@@ -110,17 +122,27 @@ export const Game: React.FC = () => {
               STRZAŁ
             </button>
           </form>
-        ) : (
+        ) : hasWon ? (
           <button
             type="button"
-            className="w-full bg-slate-800 text-white font-bold py-4 px-8 rounded-2xl flex items-center justify-center gap-3 transition-transform active:scale-95"
+            onClick={() => handleShare(attempts)}
+            className="w-full bg-akcent text-white font-bold py-4 px-8 rounded-2xl flex items-center justify-center gap-3 transition-transform active:scale-95"
           >
             <Share2 size={20} /> UDOSTĘPNIJ WYNIK
           </button>
+        ) : (
+          <div className="w-full rounded-2xl border border-glowny bg-green -50 px-6 py-4 text-center text-sm font-semibold text-glowny">
+            Spróbuj ponownie jutro!
+          </div>
         )}
 
-        {isGameOver && hasWon && (
-          <VictoryScreen attempts={attempts} onClose={handleCloseVictory} />
+        {showResultScreen && (hasWon || attempts.length >= 5) && (
+          <ResultScreen
+            attempts={attempts}
+            isWin={hasWon}
+            targetPrice={targetPrice}
+            onClose={handleCloseResult}
+          />
         )}
 
         <AttemptsBoard attempts={attempts} />

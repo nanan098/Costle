@@ -1,12 +1,8 @@
-import { Share2, ChevronUp, ChevronDown } from "lucide-react";
+import { Share2 } from "lucide-react";
 import React, { useState } from "react";
-
-// Typy danych
-interface Attempt {
-  price: number;
-  status: "red" | "yellow" | "green";
-  direction: "up" | "down";
-}
+import { VictoryScreen } from "./VictoryScreen";
+import { AttemptsBoard } from "./AttemptsBoard";
+import type { Attempt } from "../types";
 
 export const Game: React.FC = () => {
   const [guess, setGuess] = useState<string>("");
@@ -14,7 +10,8 @@ export const Game: React.FC = () => {
   const [isGameOver, setIsGameOver] = useState(false);
   const [name, setName] = useState<string>();
   const [image, setImage] = useState<string>();
-  const [date, setDate] = useState<string>("2026-05-17");
+  const [date] = useState<string>("2026-05-17");
+  const hasWon = attempts.some((attempt) => attempt.status === "green");
 
   // Pobiera obraz i nazwę produktu dnia z backendu
   React.useEffect(() => {
@@ -50,6 +47,7 @@ export const Game: React.FC = () => {
       })
       .then((data) => {
         if (data.status === "green") {
+          setAttempts([data, ...attempts]);
           setIsGameOver(true);
         } else {
           setAttempts([data, ...attempts]);
@@ -65,6 +63,10 @@ export const Game: React.FC = () => {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     handleGuess();
+  };
+
+  const handleCloseVictory = () => {
+    setIsGameOver(false);
   };
 
   return (
@@ -109,49 +111,19 @@ export const Game: React.FC = () => {
             </button>
           </form>
         ) : (
-          <button className="w-full bg-slate-800 text-white font-bold py-4 px-8 rounded-2xl flex items-center justify-center gap-3 transition-transform active:scale-95">
+          <button
+            type="button"
+            className="w-full bg-slate-800 text-white font-bold py-4 px-8 rounded-2xl flex items-center justify-center gap-3 transition-transform active:scale-95"
+          >
             <Share2 size={20} /> UDOSTĘPNIJ WYNIK
           </button>
         )}
 
-        {/* Historia Strzałów */}
-        <section className="space-y-3">
-          {attempts.map((att, index) => (
-            <div
-              key={index}
-              className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all animate-in fade-in slide-in-from-bottom-2
-                    ${
-                      att.status === "green"
-                        ? "bg-glowny border-glowny"
-                        : att.status === "yellow"
-                          ? "bg-yellow-50 border-yellow-400"
-                          : "bg-red-50 border-red-300"
-                    }`}
-            >
-              <span className="font-bold text-lg">
-                {att.price.toFixed(2)} zł
-              </span>
-              <div className="flex items-center gap-2 font-medium">
-                {att.direction === "up" ? (
-                  <ChevronUp className="text-glowny" />
-                ) : (
-                  <ChevronDown className="text-red-500" />
-                )}
-                <span>{att.direction === "up" ? "WIĘCEJ" : "MNIEJ"}</span>
-              </div>
-            </div>
-          ))}
+        {isGameOver && hasWon && (
+          <VictoryScreen attempts={attempts} onClose={handleCloseVictory} />
+        )}
 
-          {/* Puste sloty (Placeholder) */}
-          {Array.from({ length: Math.max(0, 6 - attempts.length) }).map(
-            (_, i) => (
-              <div
-                key={i}
-                className="h-14 border-2 border-dashed border-glowny rounded-2xl"
-              />
-            ),
-          )}
-        </section>
+        <AttemptsBoard attempts={attempts} />
       </main>
     </div>
   );

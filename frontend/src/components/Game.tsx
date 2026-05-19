@@ -1,9 +1,11 @@
-import { Share2 } from "lucide-react";
-import React, { useState } from "react";
+import { Share2, ArrowLeft, ArrowRight } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { ResultScreen } from "./ResultScreen";
 import { AttemptsBoard } from "./AttemptsBoard";
 import type { Attempt } from "../types";
 import { handleShare } from "../tools/handleShare";
+import { handleGuess } from "../tools/handle.Guess";
+import { getProduct } from "../tools/getProduct";
 
 export const Game: React.FC = () => {
   const [guess, setGuess] = useState<string>("");
@@ -16,65 +18,22 @@ export const Game: React.FC = () => {
   const [date] = useState<string>("2026-05-18");
   const hasWon = attempts.some((attempt) => attempt.status === "green");
 
-  // Pobiera obraz i nazwę produktu dnia z backendu
-  React.useEffect(() => {
-    fetch("http://localhost:8080/api/product", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        date: date,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setName(data.name);
-        setImage(data.image);
-      });
-  }, []);
-
-  // Wysyła strzał do backendu i aktualizuje stan gry
-  const handleGuess = () => {
-    if (!guess) return;
-    const price = parseFloat(guess);
-    fetch("http://localhost:8080/api/guess", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        date: date,
-        guess: price,
-        attemptNumber: attempts.length + 1,
-      }),
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error("Błąd serwera");
-        return response.json();
-      })
-      .then((data) => {
-        const nextAttempts = [data, ...attempts];
-        setAttempts(nextAttempts);
-        if (typeof data.correctPrice === "number") {
-          setTargetPrice(data.correctPrice);
-        }
-
-        if (data.status === "green") {
-          setIsGameOver(true);
-          setShowResultScreen(true);
-        } else {
-          setGuess("");
-          if (nextAttempts.length >= 5) {
-            setIsGameOver(true);
-            setShowResultScreen(true);
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("Błąd podczas wysyłania strzału:", error);
-      });
-  };
+  useEffect(() => {
+    getProduct(date, setName, setImage);
+  }, [date]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    handleGuess();
+    handleGuess(
+      guess,
+      date,
+      attempts,
+      setAttempts,
+      setIsGameOver,
+      setShowResultScreen,
+      setTargetPrice,
+      setGuess,
+    );
   };
 
   const handleCloseResult = () => {
@@ -82,71 +41,82 @@ export const Game: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-tlo text-glowny font-sans">
-      <main className="max-w-md mx-auto p-6 space-y-8">
-        {/* Sekcja Produktu */}
-        <section className="bg-tlo rounded-3xl p-6 shadow-sm border border-akcent">
-          <h3 className="text-sm text-akcent text-center mr-0">
-            Brana jest pod uwagę średnia cena
-          </h3>
-          <div className="aspect-square bg-tlo rounded-2xl mb-6 flex items-center justify-center overflow-hidden">
-            <img
-              src={image}
-              alt="Produkt Dnia"
-              className="object-contain w-full h-full p-4 mix-blend-multiply"
-            />
-          </div>
+    <div className="min-h-screen flex items-center justify-center gap-4 bg-tlo text-glowny font-sans px-4 py-8">
+      <ArrowLeft className="h-10 w-10 text-akcent" />
+      <div className="w-full max-w-md min-w-0">
+        <main className="bg-tlo p-6 space-y-8 rounded-3xl shadow-sm border border-akcent">
+          {/* Sekcja Produktu */}
+          <section className="bg-tlo rounded-3xl p-6 shadow-sm border border-akcent">
+            <h3 className="text-sm text-akcent text-center font-semibold uppercase tracking-wide">
+              Brana jest pod uwagę średnia cena
+            </h3>
+            <div className="aspect-square bg-tlo rounded-2xl mb-6 flex items-center justify-center overflow-hidden">
+              <img
+                src={image}
+                alt="Produkt Dnia"
+                className="object-contain w-full h-full p-4 mix-blend-multiply"
+              />
+            </div>
 
-          <div className="text-center">
-            <p className="text-sm font-semibold text-glowny uppercase tracking-widest mb-1">
-              Produkt dnia
-            </p>
-            <h2 className="text-2xl font-bold text-glowny">{name}</h2>
-          </div>
-        </section>
-        {!isGameOver ? (
-          <form onSubmit={handleSubmit} className="flex gap-2 w-full">
-            <input
-              type="number"
-              step="0.1"
-              min="0.1"
-              value={guess}
-              onChange={(e) => setGuess(e.target.value)}
-              placeholder="0.00"
-              className="flex-1 bg-white border-2 border-glowny rounded-2xl px-6 py-4 text-xl font-bold focus:outline-none focus:border-glowny transition-colors shadow-inner"
-            />
-            <button
-              type="submit"
-              className="bg-glowny hover:bg-glowny text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-glowny transition-all active:scale-95"
+            <div className="text-center">
+              <p className="text-xl font-bold text-glowny uppercase tracking-widest">
+                Produkt dnia
+              </p>
+              <p className="text-sm">{date}</p>
+              <h2 className="text-2xl font-bold text-glowny mt-3 mb-3">
+                {name}
+              </h2>
+            </div>
+          </section>
+          {!isGameOver ? (
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col sm:flex-row gap-3 w-full"
             >
-              STRZAŁ
+              <input
+                id="guess"
+                type="number"
+                step="0.1"
+                min="0.1"
+                value={guess}
+                onChange={(e) => setGuess(e.target.value)}
+                placeholder="0.00"
+                className="flex-1 min-w-0 bg-white border-2 border-glowny rounded-2xl px-6 py-4 text-xl font-bold focus:outline-none focus:border-glowny transition-colors shadow-inner"
+              />
+              <button
+                type="submit"
+                className="w-full sm:w-auto bg-glowny hover:bg-glowny text-white font-bold py-4 px-6 sm:px-8 rounded-2xl shadow-lg shadow-glowny transition-all active:scale-95"
+              >
+                STRZAŁ
+              </button>
+            </form>
+          ) : hasWon ? (
+            <button
+              type="button"
+              onClick={() => handleShare(attempts)}
+              className="w-full bg-akcent text-white font-bold py-4 px-8 rounded-2xl flex items-center justify-center gap-3 transition-transform active:scale-95"
+            >
+              <Share2 size={20} /> UDOSTĘPNIJ WYNIK
             </button>
-          </form>
-        ) : hasWon ? (
-          <button
-            type="button"
-            onClick={() => handleShare(attempts)}
-            className="w-full bg-akcent text-white font-bold py-4 px-8 rounded-2xl flex items-center justify-center gap-3 transition-transform active:scale-95"
-          >
-            <Share2 size={20} /> UDOSTĘPNIJ WYNIK
-          </button>
-        ) : (
-          <div className="w-full rounded-2xl border border-glowny bg-green -50 px-6 py-4 text-center text-sm font-semibold text-glowny">
-            Spróbuj ponownie jutro!
-          </div>
-        )}
+          ) : (
+            <div className="w-full rounded-2xl border border-glowny bg-green -50 px-6 py-4 text-center text-sm font-semibold text-glowny">
+              Spróbuj ponownie jutro!
+            </div>
+          )}
 
-        {showResultScreen && (hasWon || attempts.length >= 5) && (
-          <ResultScreen
-            attempts={attempts}
-            isWin={hasWon}
-            targetPrice={targetPrice}
-            onClose={handleCloseResult}
-          />
-        )}
+          {showResultScreen && (hasWon || attempts.length >= 5) && (
+            <ResultScreen
+              attempts={attempts}
+              isWin={hasWon}
+              targetPrice={targetPrice}
+              onClose={handleCloseResult}
+            />
+          )}
 
-        <AttemptsBoard attempts={attempts} />
-      </main>
+          <AttemptsBoard attempts={attempts} />
+        </main>
+      </div>
+      <ArrowRight className="h-10 w-10 text-akcent" />
     </div>
   );
 };

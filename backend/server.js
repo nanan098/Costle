@@ -20,6 +20,18 @@ const mockProduct = {
     image: "majo.png",
     price: 7.5,
   },
+  "2026-05-17": {
+    id: 2,
+    name: "Pizza Guseppe",
+    image: "pizza.png",
+    price: 12.3,
+  },
+  "2026-05-16": {
+    id: 3,
+    name: "Wojanek (0.5L)",
+    image: "wojanek.png",
+    price: 4,
+  },
 };
 
 app.get("/api/health", (req, res) => {

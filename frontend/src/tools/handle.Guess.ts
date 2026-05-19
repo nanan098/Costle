@@ -1,12 +1,12 @@
 import type { Attempt } from "../types/index.ts";
+import type { Dispatch, SetStateAction } from "react";
 
-// Wysyła strzał do backendu i aktualizuje stan gry
+// Wysyła strzał do backendu i aktualizuje stan gry dla konkretnego dnia
 export const handleGuess = (
   guess: string,
   date: string,
   attempts: Attempt[],
-  setAttempts: (attempts: Attempt[]) => void,
-  setIsGameOver: (isGameOver: boolean) => void,
+  setAttemptsByDate: Dispatch<SetStateAction<Record<string, Attempt[]>>>,
   setShowResultScreen: (showResultScreen: boolean) => void,
   setTargetPrice: (targetPrice: number) => void,
   setGuess: (guess: string) => void,
@@ -28,20 +28,19 @@ export const handleGuess = (
     })
     .then((data) => {
       const nextAttempts = [data, ...attempts];
-      setAttempts(nextAttempts);
+      setAttemptsByDate((prev) => ({
+        ...prev,
+        [date]: nextAttempts,
+      }));
+
       if (typeof data.correctPrice === "number") {
         setTargetPrice(data.correctPrice);
       }
 
-      if (data.status === "green") {
-        setIsGameOver(true);
+      if (data.status === "green" || nextAttempts.length >= 5) {
         setShowResultScreen(true);
       } else {
         setGuess("");
-        if (nextAttempts.length >= 5) {
-          setIsGameOver(true);
-          setShowResultScreen(true);
-        }
       }
     })
     .catch((error) => {

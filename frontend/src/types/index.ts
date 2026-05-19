@@ -4,3 +4,5 @@ export interface Attempt {
   status: "red" | "yellow" | "green";
   direction: "up" | "down" | "perfect";
 }
+
+export type AttemptsByDate = Record<string, Attempt[]>;

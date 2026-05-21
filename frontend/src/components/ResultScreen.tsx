@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Share2 } from "lucide-react";
 import type { Attempt } from "../types";
 import { handleShare } from "../tools/handleShare";
 import { directionalLabel } from "./directionalLabel";
+import confetti from "canvas-confetti";
 
 export const ResultScreen: React.FC<{
   attempts: Attempt[];
@@ -10,8 +11,39 @@ export const ResultScreen: React.FC<{
   targetPrice?: number;
   onClose: () => void;
 }> = ({ attempts, isWin, targetPrice, onClose }) => {
+  const pokazKonfetti = () => {
+    const glownyKolor = "#2fd352";
+
+    const wspolneUstawienia = {
+      particleCount: 150, // Ilość konfetti na jedną stronę
+      spread: 65, // Węższy rozrzut, żeby leciało bardziej w górę
+      angle: 90, // 90 stopni oznacza lot idealnie w górę
+      startVelocity: 70, // Siła wystrzału
+      colors: [glownyKolor], // Ograniczamy paletę tylko do jednego koloru
+      zIndex: 9999,
+    };
+
+    // Strzał z lewego dolnego rogu
+    confetti({
+      ...wspolneUstawienia,
+      origin: { x: 0.2, y: 1 }, // x: 0.1 oznacza lekkie odsunięcie od lewej krawędzi (żeby było je widać)
+    });
+
+    // Strzał z prawego dolnego rogu
+    confetti({
+      ...wspolneUstawienia,
+      origin: { x: 0.8, y: 1 }, // x: 0.9 to lekko w lewo od prawej krawędzi
+    });
+  };
+
+  useEffect(() => {
+    if (isWin) {
+      pokazKonfetti();
+    }
+  }, [isWin]);
+
   return (
-    <div className="fixed inset-0 z-50 flex min-h-full items-center justify-center bg-black/40 backdrop-blur-lg overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex min-h-full items-center justify-center bg-black/70 overflow-y-auto">
       <div className="relative w-full max-w-md rounded-4xl border border-white/30 bg-white/95 p-6 shadow-2xl shadow-black/30 m-4">
         <button
           type="button"

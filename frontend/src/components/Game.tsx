@@ -41,7 +41,7 @@ export const Game: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center gap-4 bg-gray-100 text-glowny font-sans px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center gap-4 bg-gray-100 text-glowny font-sans">
       <div className="w-full max-w-md min-w-0">
         <main className="bg-tlo p-6 space-y-8 rounded-3xl shadow-sm border border-akcent">
           {/* Sekcja Produktu */}

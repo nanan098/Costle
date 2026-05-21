@@ -14,24 +14,49 @@ class GuessLogic {
   /**
    * Sprawdza strzał użytkownika i zwraca kolor strzału oraz strzałkę.
    * @param {number} guess - Strzał użytkownika.
-   * @returns {Dictionary} .color ("green", "yellow" lub "red") .arrow ("up" lub "down").
+   * @returns {Dictionary} .try(number) .color ("green", "yellow" lub "red") .arrow ("up" lub "down").
    */
   checkGuess(guess) {
     this.guesses.push(guess);
     if (guess === this.winningPrice) {
-      return { price: guess, status: "green", direction: null };
+      return {
+        try: this.guesses.length,
+        price: guess,
+        status: "green",
+        direction: "perfect",
+      };
     }
     if (guess >= this.minYellow && guess < this.winningPrice) {
-      return { price: guess, status: "yellow", direction: "up" };
+      return {
+        try: this.guesses.length,
+        price: guess,
+        status: "yellow",
+        direction: "up",
+      };
     }
     if (guess <= this.maxYellow && guess > this.winningPrice) {
-      return { price: guess, status: "yellow", direction: "down" };
+      return {
+        try: this.guesses.length,
+        price: guess,
+        status: "yellow",
+        direction: "down",
+      };
     }
     if (guess < this.minYellow) {
-      return { price: guess, status: "red", direction: "up" };
+      return {
+        try: this.guesses.length,
+        price: guess,
+        status: "red",
+        direction: "up",
+      };
     }
     if (guess > this.maxYellow) {
-      return { price: guess, status: "red", direction: "down" };
+      return {
+        try: this.guesses.length,
+        price: guess,
+        status: "red",
+        direction: "down",
+      };
     }
   }
   /**

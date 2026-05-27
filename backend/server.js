@@ -1,7 +1,24 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-app.use(express.json());
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+
+dotenv.config();
+const dbUrl = process.env.DATABASE_URL;
+
+mongoose
+  .connect(dbUrl, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("Połączono z bazą danych"))
+  .catch((err) => console.error("Błąd połączenia z bazą danych:", err));
+
+app.use(express.json({ limit: "10kb" }));
+app.use(helmet());
 app.use(
   cors({
     origin: "http://localhost:5173", // Pozwól na żądania tylko z Twojego frontendu
@@ -9,6 +26,19 @@ app.use(
     allowedHeaders: ["Content-Type"], // I nagłówki
   }),
 );
+app.set("trust proxy", 1);
+
+// Konfiguracja limitera dla gry
+const guessLimiter = rateLimit({
+  windowMs: 10 * 1000, // Okno czasowe: 10 sekund
+  max: 5, // Maksymalnie 5 strzały w tym oknie
+  message: {
+    status: 429,
+    error: "Zgadywałeś za szybko! Możesz podać tylko 5 liczby na 10 sekund.",
+  },
+  standardHeaders: true, // Zwraca informacje o limicie w nagłówkach RateLimit-*
+  legacyHeaders: false, // Wyłącza stare nagłówki X-RateLimit-*
+});
 
 const Product = require("./product");
 const GuessLogic = require("./guessLogic");
@@ -67,8 +97,13 @@ app.post("/api/product", (req, res) => {
 });
 
 // 2. Logika sprawdzania strzału
-app.post("/api/guess", (req, res) => {
+app.post("/api/guess", guessLimiter, (req, res) => {
   const { date, guess, attemptNumber } = req.body;
+  if (typeof guess !== "number" || guess <= 0) {
+    return res
+      .status(400)
+      .json({ error: "Nieprawidłowy typ lub wartość strzału" });
+  }
   if (!mockProduct[date]) {
     return res
       .status(404)
@@ -92,6 +127,15 @@ app.post("/api/guess", (req, res) => {
     result.correctPrice = productData.price;
   }
   res.json(result);
+});
+
+app.use((err, req, res, next) => {
+  console.error("Bład serwera:", err.stack);
+
+  // Zwracamy ładny JSON, zamiast wywalać cały serwer
+  res.status(500).json({
+    error: "Wystąpił wewnętrzny błąd serwera. Spróbuj ponownie później.",
+  });
 });
 
 const PORT = 8080;

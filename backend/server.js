@@ -3,19 +3,9 @@ const app = express();
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-
-dotenv.config();
-const dbUrl = process.env.DATABASE_URL;
-
-mongoose
-  .connect(dbUrl, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("Połączono z bazą danych"))
-  .catch((err) => console.error("Błąd połączenia z bazą danych:", err));
+const GuessLogic = require("./guessLogic");
+const { getProductFromDatabase } = require("./databaseService");
+const { szyfrujToken, odszyfrujToken } = require("./jwt");
 
 app.use(express.json({ limit: "10kb" }));
 app.use(helmet());
@@ -30,38 +20,23 @@ app.set("trust proxy", 1);
 
 // Konfiguracja limitera dla gry
 const guessLimiter = rateLimit({
-  windowMs: 10 * 1000, // Okno czasowe: 10 sekund
-  max: 5, // Maksymalnie 5 strzały w tym oknie
+  windowMs: 20 * 1000, // Okno czasowe: 20 sekund
+  max: 10, // Maksymalnie 10 strzały w tym oknie
   message: {
     status: 429,
-    error: "Zgadywałeś za szybko! Możesz podać tylko 5 liczby na 10 sekund.",
+    error: "Zgadywałeś za szybko! Możesz podać tylko 10 liczby na 20 sekund.",
   },
   standardHeaders: true, // Zwraca informacje o limicie w nagłówkach RateLimit-*
   legacyHeaders: false, // Wyłącza stare nagłówki X-RateLimit-*
 });
-
-const Product = require("./product");
-const GuessLogic = require("./guessLogic");
-
-const mockProduct = {
-  "2026-05-18": {
-    id: 1,
-    name: "Majonez (1L)",
-    image: "majo.png",
-    price: 7.5,
-  },
-  "2026-05-17": {
-    id: 2,
-    name: "Pizza Guseppe",
-    image: "pizza.png",
-    price: 12.3,
-  },
-  "2026-05-16": {
-    id: 3,
-    name: "Wojanek (0.5L)",
-    image: "wojanek.png",
-    price: 4,
-  },
+/**
+ * Calculate the yellow hint range by +/-10% of the target price.
+ * "Yellow" means the guessed price is close but not exact.
+ */
+const scopeYellowGuess = (price) => {
+  const minYellow = Math.floor(price * 0.9);
+  const maxYellow = Math.ceil(price * 1.1);
+  return { minYellow, maxYellow };
 };
 
 app.get("/api/health", (req, res) => {
@@ -69,12 +44,20 @@ app.get("/api/health", (req, res) => {
 });
 
 // 1. Pobieranie danych o produkcie dnia
-app.post("/api/product", (req, res) => {
+app.post("/api/product", async (req, res) => {
   const dateProduct = req.body.date;
+  const categoryProduct = req.body.category;
+  if (typeof dateProduct !== "string" || typeof categoryProduct !== "string") {
+    return res
+      .status(400)
+      .json({ error: "Nieprawidłowy typ danych dla daty lub kategorii" });
+  }
+
   const requestedDate = new Date(dateProduct);
   if (isNaN(requestedDate.getTime())) {
     return res.status(400).json({ error: "Nieprawidłowa data" });
   }
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   requestedDate.setHours(0, 0, 0, 0);
@@ -84,55 +67,87 @@ app.post("/api/product", (req, res) => {
       .json({ error: "Nie można brać produktów z przyszłości :)" });
   }
 
-  if (mockProduct[dateProduct]) {
-    const { id, name, image } = mockProduct[dateProduct];
-    res.json({
-      id: id,
-      name: name,
-      image: image,
-    });
-  } else {
-    res.status(404).json({ error: "Produkt nie znaleziony dla tej daty" });
+  let products;
+  try {
+    products = await getProductFromDatabase(categoryProduct, dateProduct);
+  } catch (err) {
+    console.error("Błąd podczas pobierania produktów z bazy danych:", err);
+    return res.status(502).json({ error: "Błąd połączenia z bazą danych" });
+  }
+
+  if (!products || products.length === 0) {
+    return res
+      .status(404)
+      .json({ error: "Produkt nie znaleziony dla tej daty" });
+  }
+
+  try {
+    const productData = products[0];
+    const price = productData.price;
+    const { minYellow, maxYellow } = scopeYellowGuess(price);
+    const encryptedToken = await szyfrujToken(price, minYellow, maxYellow, 0);
+    productData.encryptedToken = encryptedToken;
+    delete productData.price;
+    return res.json(productData);
+  } catch (err) {
+    console.error("Błąd szyfrowania tokena produktu:", err);
+    return res.status(500).json({ error: "Błąd przetwarzania produktu" });
   }
 });
 
 // 2. Logika sprawdzania strzału
-app.post("/api/guess", guessLimiter, (req, res) => {
-  const { date, guess, attemptNumber } = req.body;
+app.post("/api/guess", guessLimiter, async (req, res) => {
+  const { encryptedToken, guess } = req.body;
+
+  if (typeof encryptedToken !== "string") {
+    return res.status(400).json({ error: "Brak zaszyfrowanego tokena" });
+  }
   if (typeof guess !== "number" || guess <= 0) {
     return res
       .status(400)
       .json({ error: "Nieprawidłowy typ lub wartość strzału" });
   }
-  if (!mockProduct[date]) {
+
+  let decrypted;
+  try {
+    decrypted = await odszyfrujToken(encryptedToken);
+  } catch (error) {
+    return res.status(400).json({ error: error.message || "Błąd tokena" });
+  }
+
+  const { cena, minYellow, maxYellow, attemptNumber } = decrypted;
+  if (attemptNumber > 5) {
     return res
-      .status(404)
-      .json({ error: "Produkt nie znaleziony dla tej daty" });
+      .status(429)
+      .json({ error: "Przekroczono limit prób", targetPrice: cena });
   }
-  const productData = mockProduct[date];
-  const productInstance = new Product(
-    productData.id,
-    productData.name,
-    productData.image,
-    productData.price,
-  );
-  const { minYellow, maxYellow } = productInstance.scopeYellowGuess();
-  const guessLogicInstance = new GuessLogic(
-    productData.price,
-    minYellow,
-    maxYellow,
-  );
-  const result = guessLogicInstance.checkGuess(guess);
-  if (result.status !== "green" && attemptNumber >= 5) {
-    result.correctPrice = productData.price;
+
+  try {
+    const guessLogic = new GuessLogic(cena, minYellow, maxYellow);
+    const guessResult = guessLogic.checkGuess(guess);
+    const responsePayload = { ...guessResult };
+
+    const newEncryptedToken = await szyfrujToken(
+      cena,
+      minYellow,
+      maxYellow,
+      attemptNumber,
+    );
+    responsePayload.encryptedToken = newEncryptedToken;
+
+    if (guessResult.status !== "green" && attemptNumber >= 5) {
+      responsePayload.targetPrice = cena;
+    }
+
+    return res.json(responsePayload);
+  } catch (err) {
+    console.error("Błąd podczas przetwarzania strzału:", err);
+    return res.status(500).json({ error: "Błąd przetwarzania strzału" });
   }
-  res.json(result);
 });
 
 app.use((err, req, res, next) => {
   console.error("Bład serwera:", err.stack);
-
-  // Zwracamy ładny JSON, zamiast wywalać cały serwer
   res.status(500).json({
     error: "Wystąpił wewnętrzny błąd serwera. Spróbuj ponownie później.",
   });

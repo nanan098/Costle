@@ -4,7 +4,7 @@ import { ResultScreen } from "./ResultScreen";
 import { AttemptsBoard } from "./AttemptsBoard";
 import type { AttemptsByDate } from "../types";
 import { handleShare } from "../tools/handleShare";
-import { handleGuess } from "../tools/handle.Guess";
+import { handleGuess } from "../tools/handleGuess";
 import { getProduct } from "../tools/getProduct";
 import { handleDateSwipe } from "../tools/handleDateSwipe";
 
@@ -12,27 +12,54 @@ export const Game: React.FC = () => {
   const [guess, setGuess] = useState<string>("");
   const [attemptsByDate, setAttemptsByDate] = useState<AttemptsByDate>({});
   const [showResultScreen, setShowResultScreen] = useState(false);
-  const [name, setName] = useState<string>();
-  const [image, setImage] = useState<string>();
-  const [targetPrice, setTargetPrice] = useState<number | undefined>(undefined);
-  const [date, setDate] = useState<string>("2026-05-18");
+  const category = "Spożywcze";
+  const [targetPrice, setTargetPrice] = useState<number>(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [name, setName] = useState<string>("");
+  const [image, setImage] = useState<string>("");
+  const [encryptedToken, setEncryptedToken] = useState<string>("");
+  const [date, setDate] = useState<string>("2026-05-17");
+  const [requestedDate, setRequestedDate] = useState<string>(date);
+  const [loadingProduct, setLoadingProduct] = useState(false);
   const currentAttempts = attemptsByDate[date] ?? [];
   const hasWon = currentAttempts.some((attempt) => attempt.status === "green");
 
   useEffect(() => {
-    getProduct(date, setName, setImage);
-  }, [date]);
+    setTargetPrice(0);
+    setErrorMessage(null);
+    setShowResultScreen(false);
+    setGuess("");
+
+    getProduct(
+      requestedDate,
+      category,
+      setName,
+      setImage,
+      setEncryptedToken,
+      setErrorMessage,
+      setLoadingProduct,
+    )
+      .then(() => {
+        setDate(requestedDate);
+      })
+      .catch(() => {
+        // Błąd już wyświetlony w setErrorMessage; nie zmieniamy daty.
+      });
+  }, [requestedDate, category]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     handleGuess(
       guess,
       date,
+      encryptedToken,
       currentAttempts,
       setAttemptsByDate,
       setShowResultScreen,
-      setTargetPrice,
       setGuess,
+      setTargetPrice,
+      setErrorMessage,
+      setEncryptedToken,
     );
   };
 
@@ -49,9 +76,10 @@ export const Game: React.FC = () => {
             <div className="h-10 w-10 flex items-center justify-center">
               {date !== "2026-05-16" ? (
                 <ArrowLeft
-                  className="h-10 w-10 text-akcent cursor-pointer"
+                  className={`h-10 w-10 ${loadingProduct ? "opacity-40 cursor-not-allowed" : "text-akcent cursor-pointer"}`}
                   onClick={() =>
-                    handleDateSwipe("left", date, setDate, setGuess)
+                    !loadingProduct &&
+                    handleDateSwipe("left", date, setRequestedDate, setGuess)
                   }
                 />
               ) : (
@@ -63,11 +91,17 @@ export const Game: React.FC = () => {
                 Brana jest pod uwagę średnia cena
               </h3>
               <div className="aspect-square bg-tlo rounded-2xl mb-6 flex items-center justify-center overflow-hidden">
-                <img
-                  src={image}
-                  alt="Produkt Dnia"
-                  className="object-contain w-full h-full p-4 mix-blend-multiply"
-                />
+                {loadingProduct ? (
+                  <div className="flex h-full w-full items-center justify-center rounded-2xl bg-tlo text-slate-500 text-sm font-semibold">
+                    Ładowanie...
+                  </div>
+                ) : (
+                  <img
+                    src={image}
+                    alt="Produkt Dnia"
+                    className="object-contain w-full h-full p-4 mix-blend-multiply"
+                  />
+                )}
               </div>
 
               <div className="text-center">
@@ -83,9 +117,10 @@ export const Game: React.FC = () => {
             <div className="h-10 w-10 flex items-center justify-center">
               {date !== "2026-05-18" ? (
                 <ArrowRight
-                  className="h-10 w-10 text-akcent cursor-pointer"
+                  className={`h-10 w-10 ${loadingProduct ? "opacity-40 cursor-not-allowed" : "text-akcent cursor-pointer"}`}
                   onClick={() =>
-                    handleDateSwipe("right", date, setDate, setGuess)
+                    !loadingProduct &&
+                    handleDateSwipe("right", date, setRequestedDate, setGuess)
                   }
                 />
               ) : (
@@ -129,12 +164,19 @@ export const Game: React.FC = () => {
             </div>
           )}
 
+          {errorMessage && (
+            <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+              {errorMessage}
+            </div>
+          )}
+
           {showResultScreen && (hasWon || currentAttempts.length >= 5) && (
             <ResultScreen
               attempts={currentAttempts}
               isWin={hasWon}
               targetPrice={targetPrice}
               onClose={handleCloseResult}
+              name={name}
             />
           )}
 

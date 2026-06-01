@@ -10,7 +10,8 @@ export const ResultScreen: React.FC<{
   isWin: boolean;
   targetPrice?: number;
   onClose: () => void;
-}> = ({ attempts, isWin, targetPrice, onClose }) => {
+  name: string;
+}> = ({ attempts, isWin, targetPrice, onClose, name }) => {
   const pokazKonfetti = () => {
     const glownyKolor = "#2fd352";
 
@@ -57,9 +58,10 @@ export const ResultScreen: React.FC<{
             <>
               <h2 className="mt-2 text-3xl font-bold text-akcent">Klasa</h2>
               <p className="mt-2 text-sm text-slate-600">
-                Udało się zgadnąć produkt w {attempts.length}{" "}
+                Udało Ci się zgadnąć produkt w {attempts.length}{" "}
                 {attempts.length === 1 ? "strzale" : "strzałach"}.
               </p>
+              <h2 className="mt-2 text-3xl font-bold text-akcent">{name}</h2>
             </>
           ) : (
             <>

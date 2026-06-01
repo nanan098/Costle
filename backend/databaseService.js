@@ -1,44 +1,46 @@
-const Product = require("./databaseForm");
+const { MongoClient } = require("mongodb");
+
+const dbUrl = process.env.DATABASE_URL;
+const client = new MongoClient(dbUrl, {
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+});
+let clientPromise = null;
 
 /**
- * Dodaje nowy produkt do bazy danych
- * @param {Object} productData - Obiekt z danymi produktu (name, price, category, releaseDate)
+ * Ensure a MongoDB client is connected and reused.
+ * If the first connection attempt fails, the promise is reset so the next call
+ * can retry.
  */
-async function createProduct(productData) {
-  try {
-    const newProduct = new Product(productData);
-    const savedProduct = await newProduct.save();
-    return savedProduct;
-  } catch (error) {
-    console.error("Błąd podczas dodawania produktu:", error);
-    throw error;
-  }
-}
-
-/**
- * Wyciąga produkt z bazy na podstawie wybranej kategorii i daty
- * @param {string} categoryName - Nazwa kategorii
- * @param {Date} releaseDate - Data wydania
- */
-async function getProduct(categoryName, releaseDate) {
-  try {
-    // Szukamy produktów pasujących do kategorii i daty
-    const products = await Product.find({
-      category: categoryName,
-      releaseDate: releaseDate,
+async function connectClient() {
+  if (!clientPromise) {
+    clientPromise = client.connect().catch((error) => {
+      clientPromise = null;
+      throw error;
     });
+  }
+  await clientPromise;
+}
 
-    if (products.length === 0)
-      throw new Error("Nie znaleziono produktu dla tej kategorii i daty");
-    return products[0];
-  } catch (error) {
-    console.error("Błąd podczas pobierania losowego produktu:", error);
-    throw error;
+/**
+ * Query products by category and release date.
+ * @param {string} category - Nazwa kategorii produktu.
+ * @param {string} date - Data w formacie YYYY-MM-DD.
+ * @returns {Promise<Array>} Lista dokumentów produktów.
+ */
+async function getProductFromDatabase(category, date) {
+  await connectClient();
+
+  try {
+    const db = client.db("Costle");
+    const col = db.collection("Products");
+    const products = await col.find({ category, releaseDate: date }).toArray();
+    console.log("Produkt został pobrany z bazy danych");
+    return products;
+  } catch (err) {
+    console.error("Błąd podczas pobierania produktów z bazy danych:", err);
+    throw err;
   }
 }
 
-// Eksportujemy funkcje, żeby można było ich użyć w innych plikach
-module.exports = {
-  createProduct,
-  getProduct,
-};
+exports.getProductFromDatabase = getProductFromDatabase;

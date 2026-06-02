@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
+﻿import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Share2 } from "lucide-react";
 import type { Attempt } from "../types";
-import { handleShare } from "../tools/handleShare";
 import { directionalLabel } from "./directionalLabel";
+import { handleShare } from "../tools/handleShare";
 import confetti from "canvas-confetti";
 
 export const ResultScreen: React.FC<{
@@ -10,41 +10,57 @@ export const ResultScreen: React.FC<{
   isWin: boolean;
   targetPrice?: number;
   onClose: () => void;
-}> = ({ attempts, isWin, targetPrice, onClose }) => {
-  const pokazKonfetti = () => {
+  name: string;
+}> = ({ attempts, isWin, targetPrice, onClose, name }) => {
+  const resultRef = useRef<HTMLDivElement | null>(null);
+  const [isPreparingShare, setIsPreparingShare] = useState(false);
+
+  const showShare = useCallback(async () => {
+    if (!resultRef.current) return;
+
+    setIsPreparingShare(true);
+    await new Promise(requestAnimationFrame);
+
+    try {
+      await handleShare(attempts, name, resultRef.current);
+    } finally {
+      setIsPreparingShare(false);
+    }
+  }, [attempts, name]);
+
+  const pokazKonfetti = useCallback(() => {
     const glownyKolor = "#2fd352";
 
     const wspolneUstawienia = {
-      particleCount: 150, // Ilość konfetti na jedną stronę
-      spread: 65, // Węższy rozrzut, żeby leciało bardziej w górę
-      angle: 90, // 90 stopni oznacza lot idealnie w górę
-      startVelocity: 70, // Siła wystrzału
-      colors: [glownyKolor], // Ograniczamy paletę tylko do jednego koloru
+      particleCount: 150,
+      spread: 65,
+      angle: 90,
+      startVelocity: 70,
+      colors: [glownyKolor],
       zIndex: 9999,
     };
 
-    // Strzał z lewego dolnego rogu
     confetti({
       ...wspolneUstawienia,
-      origin: { x: 0.2, y: 1 }, // x: 0.1 oznacza lekkie odsunięcie od lewej krawędzi (żeby było je widać)
+      origin: { x: 0.2, y: 1 },
     });
 
-    // Strzał z prawego dolnego rogu
     confetti({
       ...wspolneUstawienia,
-      origin: { x: 0.8, y: 1 }, // x: 0.9 to lekko w lewo od prawej krawędzi
+      origin: { x: 0.8, y: 1 },
     });
-  };
+  }, []);
 
   useEffect(() => {
-    if (isWin) {
-      pokazKonfetti();
-    }
-  }, [isWin]);
+    if (isWin) pokazKonfetti();
+  }, [isWin, pokazKonfetti]);
 
   return (
     <div className="fixed inset-0 z-50 flex min-h-full items-center justify-center bg-black/70 overflow-y-auto">
-      <div className="relative w-full max-w-md rounded-4xl border border-white/30 bg-white/95 p-6 shadow-2xl shadow-black/30 m-4">
+      <div
+        className="relative w-full max-w-md rounded-4xl border border-white/30 bg-white/95 p-6 shadow-2xl shadow-black/30 m-4"
+        ref={resultRef}
+      >
         <button
           type="button"
           onClick={onClose}
@@ -52,14 +68,16 @@ export const ResultScreen: React.FC<{
         >
           ✕
         </button>
+
         <div className="text-center">
           {isWin ? (
             <>
               <h2 className="mt-2 text-3xl font-bold text-akcent">Klasa</h2>
               <p className="mt-2 text-sm text-slate-600">
-                Udało się zgadnąć produkt w {attempts.length}{" "}
+                Udało Ci się zgadnąć produkt w {attempts.length}{" "}
                 {attempts.length === 1 ? "strzale" : "strzałach"}.
               </p>
+              <h2 className="mt-2 text-3xl font-bold text-akcent">{name}</h2>
             </>
           ) : (
             <>
@@ -84,8 +102,8 @@ export const ResultScreen: React.FC<{
           <div className="my-6">
             <button
               type="button"
-              onClick={() => handleShare(attempts)}
-              className="w-full bg-akcent hover:bg-akcent/90 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg shadow-glowny/30 text-sm tracking-wide uppercase"
+              onClick={showShare}
+              className={`w-full bg-akcent hover:bg-akcent/90 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg shadow-glowny/30 text-sm tracking-wide uppercase ${isPreparingShare ? "hidden" : ""}`}
             >
               <Share2 size={18} /> Udostępnij wynik
             </button>
@@ -99,50 +117,49 @@ export const ResultScreen: React.FC<{
           </div>
 
           <ul className="space-y-3">
-            {attempts.map((attempt, index) => (
-              <li
-                key={`${attempt.price}-${index}`}
-                className={`flex items-center justify-between p-3 rounded-2xl border-2 transition-all ${
-                  attempt.status === "green"
-                    ? "bg-glowny border-glowny"
-                    : attempt.status === "yellow"
-                      ? "bg-yellow-50 border-yellow-400"
-                      : "bg-red-50 border-red-400"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80 text-sm font-bold text-slate-900 shadow-sm">
-                    {attempts.length - index}
-                  </div>
-                  <div>
-                    <p
-                      className={`inline-flex items-center rounded-full bg-white px-3 py-1 text-sm font-semibold ${directionalLabel(attempt).colorClass}`}
-                    >
-                      {attempt.price.toFixed(2)} zł
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase shadow-sm ${
+            {attempts.map((attempt, index) => {
+              const label = directionalLabel(attempt);
+
+              return (
+                <li
+                  key={`${attempt.price}-${index}`}
+                  className={`flex items-center justify-between p-3 rounded-2xl border-2 transition-all ${
                     attempt.status === "green"
-                      ? "bg-green-50 text-glowny"
+                      ? "bg-glowny border-glowny"
                       : attempt.status === "yellow"
-                        ? "bg-yellow-50 text-yellow-400"
-                        : "bg-red-50 text-red-500"
+                        ? "bg-yellow-50 border-yellow-400"
+                        : "bg-red-50 border-red-400"
                   }`}
                 >
-                  {(() => {
-                    const label = directionalLabel(attempt);
-                    return (
-                      <span className="flex items-center gap-1">
-                        {label.icon}
-                        <span>{label.label}</span>
-                      </span>
-                    );
-                  })()}
-                </div>
-              </li>
-            ))}
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80 text-sm font-bold text-slate-900 shadow-sm">
+                      {attempts.length - index}
+                    </div>
+                    <div>
+                      <p
+                        className={`inline-flex items-center rounded-full bg-white px-3 py-1 text-sm font-semibold ${label.colorClass}`}
+                      >
+                        {attempt.price.toFixed(2)} zł
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase shadow-sm ${
+                      attempt.status === "green"
+                        ? "bg-green-50 text-glowny"
+                        : attempt.status === "yellow"
+                          ? "bg-yellow-50 text-yellow-400"
+                          : "bg-red-50 text-red-500"
+                    }`}
+                  >
+                    <span className="flex items-center gap-1">
+                      {label.icon}
+                      <span>{label.label}</span>
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>

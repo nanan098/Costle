@@ -35,7 +35,6 @@ async function getProductFromDatabase(category, date) {
     const db = client.db("Costle");
     const col = db.collection("Products");
     const products = await col.find({ category, releaseDate: date }).toArray();
-    console.log("Produkt został pobrany z bazy danych");
     return products;
   } catch (err) {
     console.error("Błąd podczas pobierania produktów z bazy danych:", err);

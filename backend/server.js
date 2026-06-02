@@ -95,7 +95,6 @@ app.post("/api/product", async (req, res) => {
   }
 });
 
-// 2. Logika sprawdzania strzału
 app.post("/api/guess", guessLimiter, async (req, res) => {
   const { encryptedToken, guess } = req.body;
 

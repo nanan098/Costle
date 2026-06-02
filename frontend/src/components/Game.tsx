@@ -1,9 +1,9 @@
-import { Share2, ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { ResultScreen } from "./ResultScreen";
 import { AttemptsBoard } from "./AttemptsBoard";
+import { CookieConsentBanner } from "./CookieConsentBanner";
 import type { AttemptsByDate } from "../types";
-import { handleShare } from "../tools/handleShare";
 import { handleGuess } from "../tools/handleGuess";
 import { getProduct } from "../tools/getProduct";
 import { handleDateSwipe } from "../tools/handleDateSwipe";
@@ -70,8 +70,8 @@ export const Game: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center gap-4 bg-gray-100 text-glowny font-sans">
       <div className="w-full max-w-md min-w-0">
+        <CookieConsentBanner />
         <main className="bg-tlo p-6 space-y-8 rounded-3xl shadow-sm border border-akcent">
-          {/* Sekcja Produktu */}
           <section className="bg-tlo rounded-3xl p-6 shadow-sm border border-akcent flex flex-row items-center">
             <div className="h-10 w-10 flex items-center justify-center">
               {date !== "2026-05-16" ? (
@@ -151,15 +151,11 @@ export const Game: React.FC = () => {
               </button>
             </form>
           ) : hasWon ? (
-            <button
-              type="button"
-              onClick={() => handleShare(currentAttempts)}
-              className="w-full bg-akcent text-white font-bold py-4 px-8 rounded-2xl flex items-center justify-center gap-3 transition-transform active:scale-95"
-            >
-              <Share2 size={20} /> UDOSTĘPNIJ WYNIK
-            </button>
-          ) : (
             <div className="w-full rounded-2xl border border-glowny bg-green -50 px-6 py-4 text-center text-sm font-semibold text-glowny">
+              Gratulacje! Zgadłeś produkt!
+            </div>
+          ) : (
+            <div className="w-full rounded-2xl border border-red-300 bg-red-50 px-6 py-4 text-center text-sm font-semibold text-red-700">
               Niestety, nie tym razem!
             </div>
           )}
@@ -181,6 +177,35 @@ export const Game: React.FC = () => {
           )}
 
           <AttemptsBoard attempts={currentAttempts} />
+
+          <div className="mt-6 text-center text-sm text-slate-500 space-y-2">
+            <p className="space-x-2">
+              <a
+                href="/Polityka_prywatnosci.pdf"
+                target="_blank"
+                rel="noreferrer"
+                className="underline transition hover:text-glowny"
+              >
+                Polityka prywatności
+              </a>
+              <span>·</span>
+              <a
+                href="/Regulamin.pdf"
+                target="_blank"
+                rel="noreferrer"
+                className="underline transition hover:text-glowny"
+              >
+                Regulamin
+              </a>
+              <span>·</span>
+              <a
+                href="mailto:snap.rescue00@gmail.com"
+                className="underline transition hover:text-glowny"
+              >
+                Zgłoś błąd
+              </a>
+            </p>
+          </div>
         </main>
       </div>
     </div>

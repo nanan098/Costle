@@ -24,7 +24,7 @@ export const getProduct = async (
   setErrorMessage(null);
 
   try {
-    const response = await fetch("http://localhost:8080/api/product", {
+    const response = await fetch("https://costle.onrender.com/api/product", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

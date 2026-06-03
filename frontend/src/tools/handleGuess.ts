@@ -27,7 +27,7 @@ export const handleGuess = (
 
   setErrorMessage(null);
 
-  fetch("http://localhost:8080/api/guess", {
+  fetch("https://costle.onrender.com/api/guess", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

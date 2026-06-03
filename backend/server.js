@@ -11,7 +11,7 @@ app.use(express.json({ limit: "10kb" }));
 app.use(helmet());
 app.use(
   cors({
-    origin: "http://localhost:5173", // Pozwól na żądania tylko z Twojego frontendu
+    origin: "costle.vercel.app", // Pozwól na żądania tylko z Twojego frontendu
     methods: ["GET", "POST"], // Określ dozwolone metody
     allowedHeaders: ["Content-Type"], // I nagłówki
   }),
@@ -152,5 +152,5 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = 8080;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Backend działa na porcie ${PORT}`));

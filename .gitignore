@@ -13,7 +13,7 @@ dist-ssr
 *.local
 .env
 .env.local
-backend/addProduct.js
+addProduct.js
 
 # Editor directories and files
 .vscode/*
@@ -25,4 +25,5 @@ backend/addProduct.js
 *.njsproj
 *.sln
 *.sw?
+
 

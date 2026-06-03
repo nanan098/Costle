@@ -4,7 +4,10 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const GuessLogic = require("./guessLogic");
-const { getProductFromDatabase } = require("./databaseService");
+const {
+  getProductFromDatabase,
+  getOldestReleaseDate,
+} = require("./databaseService");
 const { szyfrujToken, odszyfrujToken } = require("./jwt");
 
 app.use(express.json({ limit: "10kb" }));
@@ -92,6 +95,21 @@ app.post("/api/product", async (req, res) => {
   } catch (err) {
     console.error("Błąd szyfrowania tokena produktu:", err);
     return res.status(500).json({ error: "Błąd przetwarzania produktu" });
+  }
+});
+
+app.get("/api/oldest-date", async (req, res) => {
+  const category = req.query.category;
+  if (typeof category !== "string") {
+    return res.status(400).json({ error: "Nieprawidłowy parametr category" });
+  }
+
+  try {
+    const oldestDate = await getOldestReleaseDate(category);
+    return res.json({ oldestDate });
+  } catch (err) {
+    console.error("Błąd podczas pobierania najstarszej daty:", err);
+    return res.status(502).json({ error: "Błąd połączenia z bazą danych" });
   }
 });
 

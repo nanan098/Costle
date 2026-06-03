@@ -4,21 +4,20 @@ export const handleDateSwipe = (
   setDate: (date: string) => void,
   setGuess: (guess: string) => void,
 ) => {
+  const [year, month, day] = date.split("-").map(Number);
+  const currentDate = new Date(year, month - 1, day);
+
+  const nextDate = new Date(currentDate);
   if (direction === "left") {
-    // Przejdź do poprzedniego dnia
-    const previousDate = new Date(date);
-    previousDate.setDate(previousDate.getDate() - 1);
-    const formattedPreviousDate = previousDate.toISOString().split("T")[0];
-
-    setDate(formattedPreviousDate);
-    setGuess("");
+    nextDate.setDate(currentDate.getDate() - 1);
   } else {
-    // Przejdź do następnego dnia
-    const nextDate = new Date(date);
-    nextDate.setDate(nextDate.getDate() + 1);
-    const formattedNextDate = nextDate.toISOString().split("T")[0];
-
-    setDate(formattedNextDate);
-    setGuess("");
+    nextDate.setDate(currentDate.getDate() + 1);
   }
+
+  const formattedDate = `${nextDate.getFullYear()}-${String(
+    nextDate.getMonth() + 1,
+  ).padStart(2, "0")}-${String(nextDate.getDate()).padStart(2, "0")}`;
+
+  setDate(formattedDate);
+  setGuess("");
 };

@@ -19,8 +19,7 @@ export const Game: React.FC = () => {
   const [image, setImage] = useState<string>("");
   const [encryptedToken, setEncryptedToken] = useState<string>("");
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayIso = today.toISOString().slice(0, 10);
+  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   const [date, setDate] = useState<string>(todayIso);
   const [requestedDate, setRequestedDate] = useState<string>(todayIso);

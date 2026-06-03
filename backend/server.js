@@ -11,7 +11,7 @@ app.use(express.json({ limit: "10kb" }));
 app.use(helmet());
 app.use(
   cors({
-    origin: "https://costle.vercel.app/", // Pozwól na żądania tylko z Twojego frontendu
+    origin: "https://costle.vercel.app", // Pozwól na żądania tylko z Twojego frontendu
     methods: ["GET", "POST"], // Określ dozwolone metody
     allowedHeaders: ["Content-Type"], // I nagłówki
   }),

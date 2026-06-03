@@ -1,26 +1,17 @@
 import React, { useEffect, useState } from "react";
 
 const COOKIE_CONSENT_KEY = "cookieConsent";
-const GA_MEASUREMENT_ID = "G-XXXXXXXXXX";
-const AW_CONVERSION_ID = "AW-XXXXXXXXX";
+const ADS_CLIENT_ID = "ca-pub-5660301718721342";
 
 const injectTrackingScripts = () => {
-  if (document.getElementById("gtag-js")) return;
-
-  const gtagScript = document.createElement("script");
-  gtagScript.id = "gtag-js";
-  gtagScript.async = true;
-  gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-  document.head.appendChild(gtagScript);
-
-  const inlineScript = document.createElement("script");
-  inlineScript.id = "gtag-inline";
-  inlineScript.text = `window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', '${GA_MEASUREMENT_ID}');
-gtag('config', '${AW_CONVERSION_ID}');`;
-  document.head.appendChild(inlineScript);
+  if (!document.getElementById("adsbygoogle-js")) {
+    const adsScript = document.createElement("script");
+    adsScript.id = "adsbygoogle-js";
+    adsScript.async = true;
+    adsScript.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADS_CLIENT_ID}`;
+    adsScript.crossOrigin = "anonymous";
+    document.head.appendChild(adsScript);
+  }
 };
 
 export const CookieConsentBanner: React.FC = () => {
@@ -52,8 +43,8 @@ export const CookieConsentBanner: React.FC = () => {
           </p>
           <p className="mt-1 text-sm text-slate-600">
             Używamy plików cookie, aby poprawić działanie strony i analizować
-            ruch. Kliknij „Akceptuję”, aby włączyć Google Analytics i Google
-            Ads. Więcej informacji znajdziesz w naszej{" "}
+            ruch. Kliknij „Akceptuję”, aby wyrazić zgodę. Więcej informacji
+            znajdziesz w naszej{" "}
             <a
               href="/Polityka_prywatnosci.pdf"
               className="font-medium text-glowny underline transition hover:text-emerald-600"

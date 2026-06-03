@@ -42,4 +42,25 @@ async function getProductFromDatabase(category, date) {
   }
 }
 
+async function getOldestReleaseDate(category) {
+  await connectClient();
+
+  try {
+    const db = client.db("Costle");
+    const col = db.collection("Products");
+    const oldest = await col
+      .find({ category })
+      .sort({ releaseDate: 1 })
+      .limit(1)
+      .project({ releaseDate: 1, _id: 0 })
+      .toArray();
+
+    return oldest.length === 0 ? null : oldest[0].releaseDate;
+  } catch (err) {
+    console.error("Błąd podczas pobierania najstarszej daty:", err);
+    throw err;
+  }
+}
+
 exports.getProductFromDatabase = getProductFromDatabase;
+exports.getOldestReleaseDate = getOldestReleaseDate;

@@ -6,6 +6,7 @@ import { CookieConsentBanner } from "./CookieConsentBanner";
 import type { AttemptsByDate } from "../types";
 import { handleGuess } from "../tools/handleGuess";
 import { getProduct } from "../tools/getProduct";
+import { getOldestDate } from "../tools/getOldestDate";
 import { handleDateSwipe } from "../tools/handleDateSwipe";
 
 export const Game: React.FC = () => {
@@ -19,13 +20,18 @@ export const Game: React.FC = () => {
   const [image, setImage] = useState<string>("");
   const [encryptedToken, setEncryptedToken] = useState<string>("");
   const today = new Date();
-  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const todayIso = `${today.getFullYear()}-${String(
+    today.getMonth() + 1,
+  ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
+  const [oldestDate, setOldestDate] = useState<string | null>(null);
   const [date, setDate] = useState<string>(todayIso);
   const [requestedDate, setRequestedDate] = useState<string>(todayIso);
   const [loadingProduct, setLoadingProduct] = useState(false);
   const currentAttempts = attemptsByDate[date] ?? [];
   const hasWon = currentAttempts.some((attempt) => attempt.status === "green");
+  const canSwipeLeft = oldestDate !== null && date > oldestDate;
+  const canSwipeRight = date < todayIso;
 
   useEffect(() => {
     setTargetPrice(0);
@@ -49,6 +55,18 @@ export const Game: React.FC = () => {
         // Błąd już wyświetlony w setErrorMessage; nie zmieniamy daty.
       });
   }, [requestedDate, category]);
+
+  useEffect(() => {
+    getOldestDate(category)
+      .then((oldest) => {
+        if (oldest) {
+          setOldestDate(oldest);
+        }
+      })
+      .catch((error) => {
+        console.error("Błąd podczas pobierania najstarszej daty:", error);
+      });
+  }, [category]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -77,11 +95,12 @@ export const Game: React.FC = () => {
         <main className="bg-tlo p-6 space-y-8 rounded-3xl shadow-sm border border-akcent">
           <section className="bg-tlo rounded-3xl p-6 shadow-sm border border-akcent flex flex-row items-center">
             <div className="h-10 w-10 flex items-center justify-center">
-              {date !== "2026-05-16" ? (
+              {canSwipeLeft ? (
                 <ArrowLeft
                   className={`h-10 w-10 ${loadingProduct ? "opacity-40 cursor-not-allowed" : "text-akcent cursor-pointer"}`}
                   onClick={() =>
                     !loadingProduct &&
+                    canSwipeLeft &&
                     handleDateSwipe("left", date, setRequestedDate, setGuess)
                   }
                 />
@@ -118,11 +137,12 @@ export const Game: React.FC = () => {
               </div>
             </div>
             <div className="h-10 w-10 flex items-center justify-center">
-              {date !== "2026-05-18" ? (
+              {canSwipeRight ? (
                 <ArrowRight
                   className={`h-10 w-10 ${loadingProduct ? "opacity-40 cursor-not-allowed" : "text-akcent cursor-pointer"}`}
                   onClick={() =>
                     !loadingProduct &&
+                    canSwipeRight &&
                     handleDateSwipe("right", date, setRequestedDate, setGuess)
                   }
                 />

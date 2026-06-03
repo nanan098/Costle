@@ -18,8 +18,12 @@ export const Game: React.FC = () => {
   const [name, setName] = useState<string>("");
   const [image, setImage] = useState<string>("");
   const [encryptedToken, setEncryptedToken] = useState<string>("");
-  const [date, setDate] = useState<string>("2026-05-17");
-  const [requestedDate, setRequestedDate] = useState<string>(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayIso = today.toISOString().slice(0, 10);
+
+  const [date, setDate] = useState<string>(todayIso);
+  const [requestedDate, setRequestedDate] = useState<string>(todayIso);
   const [loadingProduct, setLoadingProduct] = useState(false);
   const currentAttempts = attemptsByDate[date] ?? [];
   const hasWon = currentAttempts.some((attempt) => attempt.status === "green");

@@ -74,7 +74,7 @@ ENCRYPTION_KEY=<hexowa-wartość-klucza-32-bajtowego>
 docker compose up --build
 ```
 
-- Backend będzie dostępny pod: `http://localhost:8080`
+- Backend będzie dostępny pod: `http://localhost:3000`
 - Frontend będzie dostępny pod: `http://localhost:5173`
 
 #### Opcja B: ręczne uruchomienie
@@ -98,7 +98,7 @@ npm run dev
 ## Adresy URL
 
 - Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:8080/api`
+- Backend API: `http://localhost:3000/api`
 
 ## Wskazówki
 
@@ -108,6 +108,6 @@ npm run dev
 
 ## Link do projektu / demo
 
-`https://your-deployment-link.example.com`
+`https://costle.vercel.app`
 
 ---

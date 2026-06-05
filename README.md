@@ -108,6 +108,6 @@ npm run dev
 
 ## Link do projektu / demo
 
-`https://costle.vercel.app`
+[Costle.vercel.app](https://costle.vercel.app)
 
 ---

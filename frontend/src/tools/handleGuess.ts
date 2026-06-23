@@ -1,5 +1,6 @@
 import type { Attempt } from "../types/index.ts";
 import type { Dispatch, SetStateAction } from "react";
+import { API_URL } from "../config/api";
 
 /**
  * Submit a guess to the backend and update the UI state.
@@ -27,7 +28,7 @@ export const handleGuess = (
 
   setErrorMessage(null);
 
-  fetch("https://costle.onrender.com/api/guess", {
+  fetch(`${API_URL}/guess`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

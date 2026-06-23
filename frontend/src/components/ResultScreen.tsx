@@ -29,7 +29,7 @@ export const ResultScreen: React.FC<{
   }, [attempts, name]);
 
   const pokazKonfetti = useCallback(() => {
-    const glownyKolor = "#2fd352";
+    const glownyKolor = "#1a9b4a";
 
     const wspolneUstawienia = {
       particleCount: 150,
@@ -56,15 +56,15 @@ export const ResultScreen: React.FC<{
   }, [isWin, pokazKonfetti]);
 
   return (
-    <div className="fixed inset-0 z-50 flex min-h-full items-center justify-center bg-black/70 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex min-h-full items-center justify-center bg-akcent/60 overflow-y-auto">
       <div
-        className="relative w-full max-w-md rounded-4xl border border-white/30 bg-white/95 p-6 shadow-2xl shadow-black/30 m-4"
+        className="relative w-full max-w-md rounded-2xl border border-border bg-tlo p-6 shadow-xl m-4"
         ref={resultRef}
       >
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-sm font-bold text-slate-700 shadow-md transition hover:bg-slate-100"
+          className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-surface hover:text-akcent"
         >
           ✕
         </button>
@@ -72,25 +72,25 @@ export const ResultScreen: React.FC<{
         <div className="text-center">
           {isWin ? (
             <>
-              <h2 className="mt-2 text-3xl font-bold text-akcent">Klasa</h2>
-              <p className="mt-2 text-sm text-slate-600">
+              <h2 className="mt-2 text-2xl font-bold text-akcent">Klasa!</h2>
+              <p className="mt-2 text-sm text-akcent/70">
                 Udało Ci się zgadnąć produkt w {attempts.length}{" "}
                 {attempts.length === 1 ? "strzale" : "strzałach"}.
               </p>
-              <h2 className="mt-2 text-3xl font-bold text-akcent">{name}</h2>
+              <h2 className="mt-3 text-xl font-bold text-glowny">{name}</h2>
             </>
           ) : (
             <>
-              <h2 className="mt-2 text-3xl font-bold text-red-600">
+              <h2 className="mt-2 text-2xl font-bold text-red-700">
                 Nie tym razem
               </h2>
               {typeof targetPrice === "number" && (
                 <div className="mt-3 text-center mb-4">
-                  <p className="mt-3 text-xl font-semibold text-slate-800">
+                  <p className="mt-3 text-base font-medium text-akcent/70">
                     Prawidłowa cena to:
                   </p>
                   <span className="font-bold text-glowny text-3xl">
-                    {targetPrice.toFixed(2)} zł.
+                    {targetPrice.toFixed(2)} zł
                   </span>
                 </div>
               )}
@@ -103,53 +103,53 @@ export const ResultScreen: React.FC<{
             <button
               type="button"
               onClick={showShare}
-              className={`w-full bg-akcent hover:bg-akcent/90 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg shadow-glowny/30 text-sm tracking-wide uppercase ${isPreparingShare ? "hidden" : ""}`}
+              className={`w-full bg-akcent hover:bg-akcent/90 text-white font-semibold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2.5 transition-colors text-sm ${isPreparingShare ? "hidden" : ""}`}
             >
               <Share2 size={18} /> Udostępnij wynik
             </button>
           </div>
         )}
 
-        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-          <div className="mb-3 flex items-center justify-between text-sm font-semibold text-slate-600">
+        <div className="rounded-xl border border-border bg-surface p-4">
+          <div className="mb-3 flex items-center justify-between text-sm font-medium text-akcent/70">
             <span>Podsumowanie strzałów</span>
             <span className="text-glowny">Wynik</span>
           </div>
 
-          <ul className="space-y-3">
+          <ul className="space-y-2.5">
             {attempts.map((attempt, index) => {
               const label = directionalLabel(attempt);
 
               return (
                 <li
                   key={`${attempt.price}-${index}`}
-                  className={`flex items-center justify-between p-3 rounded-2xl border-2 transition-all ${
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors ${
                     attempt.status === "green"
-                      ? "bg-glowny border-glowny"
+                      ? "bg-green-50 border-glowny/50"
                       : attempt.status === "yellow"
-                        ? "bg-yellow-50 border-yellow-400"
-                        : "bg-red-50 border-red-400"
+                        ? "bg-amber-50 border-amber-300"
+                        : "bg-red-50 border-red-200"
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80 text-sm font-bold text-slate-900 shadow-sm">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-tlo text-sm font-semibold text-akcent border border-border">
                       {attempts.length - index}
                     </div>
                     <div>
                       <p
-                        className={`inline-flex items-center rounded-full bg-white px-3 py-1 text-sm font-semibold ${label.colorClass}`}
+                        className={`inline-flex items-center text-sm font-semibold ${label.colorClass}`}
                       >
                         {attempt.price.toFixed(2)} zł
                       </p>
                     </div>
                   </div>
                   <div
-                    className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase shadow-sm ${
+                    className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium uppercase ${
                       attempt.status === "green"
-                        ? "bg-green-50 text-glowny"
+                        ? "text-glowny"
                         : attempt.status === "yellow"
-                          ? "bg-yellow-50 text-yellow-400"
-                          : "bg-red-50 text-red-500"
+                          ? "text-amber-600"
+                          : "text-red-600"
                     }`}
                   >
                     <span className="flex items-center gap-1">

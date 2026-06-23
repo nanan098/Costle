@@ -11,16 +11,16 @@ export const AttemptsBoard: React.FC<{ attempts: Attempt[] }> = ({
         return (
           <div
             key={index}
-            className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all animate-in fade-in slide-in-from-bottom-2
+            className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-colors
                       ${
                         att.status === "green"
-                          ? "bg-green-50 border-glowny"
+                          ? "bg-green-50 border-glowny/50"
                           : att.status === "yellow"
-                            ? "bg-yellow-50 border-yellow-400"
-                            : "bg-red-50 border-red-400"
+                            ? "bg-amber-50 border-amber-300"
+                            : "bg-red-50 border-red-200"
                       }`}
           >
-            <span className={`font-bold text-lg ${label.colorClass}`}>
+            <span className={`font-semibold text-lg ${label.colorClass}`}>
               {att.price.toFixed(2)} zł
             </span>
             <div className="flex items-center gap-2 font-medium">

@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
+import { API_URL } from "../config/api";
 
 export const getOldestDate = async (
   category: string,
@@ -6,9 +7,7 @@ export const getOldestDate = async (
 ) => {
   try {
     const response = await fetch(
-      `https://costle.onrender.com/api/oldest-date?category=${encodeURIComponent(
-        category,
-      )}`,
+      `${API_URL}/oldest-date?category=${encodeURIComponent(category)}`,
       {
         method: "GET",
       },

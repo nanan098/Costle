@@ -57,14 +57,27 @@ cd Costle
 
 ### 2. Przygotuj konfigurację backendu
 
-Utwórz plik `backend/.env` z następującymi zmiennymi:
+Skopiuj `backend/.env.example` do `backend/.env` i uzupełnij wartości:
 
 ```env
 DATABASE_URL=mongodb+srv://<user>:<password>@<cluster>/Costle
 ENCRYPTION_KEY=<hexowa-wartość-klucza-32-bajtowego>
+PORT=8080
+CORS_ORIGIN=https://costle.vercel.app
+```
+
+Do testów lokalnych utwórz dodatkowo `backend/.env.local` (nadpisuje `.env` poza produkcją):
+
+```env
+CORS_ORIGIN=http://localhost:5173
 ```
 
 > `ENCRYPTION_KEY` musi być 32-bajtowym kluczem zapisanym w formacie heksadecymalnym.
+
+Frontend korzysta z osobnych plików środowiskowych Vite:
+
+- `frontend/.env.development` — lokalnie (`VITE_API_URL=http://localhost:8080/api`)
+- `frontend/.env.production` — build na Vercel (`VITE_API_URL=https://costle.onrender.com/api`)
 
 ### 3. Uruchom backend i frontend lokalnie
 
@@ -104,7 +117,7 @@ npm run dev
 
 - Upewnij się, że MongoDB jest dostępne i kolekcja `Products` zawiera dokumenty z polami `category`, `releaseDate` oraz `price`.
 - Tokeny gry wygaśnię po 5 minutach, co pomaga zabezpieczyć stan gry.
-- Zaktualizuj wartość `origin` w `backend/server.js`, jeśli frontend będzie działać na innym hoście.
+- Na Renderze ustaw `CORS_ORIGIN=https://costle.vercel.app`. Lokalnie backend ładuje `backend/.env.local` z `CORS_ORIGIN=http://localhost:5173`.
 
 ## Link do projektu / demo
 

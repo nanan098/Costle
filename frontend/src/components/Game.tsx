@@ -89,15 +89,15 @@ export const Game: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center gap-4 bg-gray-100 text-glowny font-sans">
+    <div className="min-h-screen flex items-center justify-center gap-4 bg-surface text-akcent font-sans">
       <div className="w-full max-w-md min-w-0">
         <CookieConsentBanner />
-        <main className="bg-tlo p-6 space-y-8 rounded-3xl shadow-sm border border-akcent">
-          <section className="bg-tlo rounded-3xl p-6 shadow-sm border border-akcent flex flex-row items-center">
-            <div className="h-10 w-10 flex items-center justify-center">
+        <main className="bg-tlo p-6 space-y-8 border border-border shadow-sm">
+          <section className="flex flex-row items-center">
+            <div className="h-10 w-10 flex items-center justify-center shrink-0">
               {canSwipeLeft ? (
                 <ArrowLeft
-                  className={`h-10 w-10 ${loadingProduct ? "opacity-40 cursor-not-allowed" : "text-akcent cursor-pointer"}`}
+                  className={`h-8 w-8 ${loadingProduct ? "opacity-40 cursor-not-allowed" : "text-akcent/60 cursor-pointer hover:text-akcent transition-colors"}`}
                   onClick={() =>
                     !loadingProduct &&
                     canSwipeLeft &&
@@ -108,13 +108,13 @@ export const Game: React.FC = () => {
                 <div className="h-10 w-10" />
               )}
             </div>
-            <div>
-              <h3 className="text-sm text-akcent text-center font-semibold uppercase tracking-wide">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xs text-akcent/70 text-center font-medium uppercase tracking-wide">
                 Brana jest pod uwagę średnia cena
               </h3>
-              <div className="aspect-square bg-tlo rounded-2xl mb-6 flex items-center justify-center overflow-hidden">
+              <div className="aspect-square bg-surface rounded-xl my-4 flex items-center justify-center overflow-hidden border border-border">
                 {loadingProduct ? (
-                  <div className="flex h-full w-full items-center justify-center rounded-2xl bg-tlo text-slate-500 text-sm font-semibold">
+                  <div className="flex h-full w-full items-center justify-center text-slate-500 text-sm font-medium">
                     Ładowanie...
                   </div>
                 ) : (
@@ -127,19 +127,19 @@ export const Game: React.FC = () => {
               </div>
 
               <div className="text-center">
-                <p className="text-xl font-bold text-glowny uppercase tracking-widest">
+                <p className="text-xs font-semibold text-glowny uppercase tracking-wide">
                   Produkt dnia
                 </p>
-                <p className="text-sm">{date}</p>
-                <h2 className="text-2xl font-bold text-glowny mt-3 mb-3">
+                <p className="text-sm text-akcent/60 mt-0.5">{date}</p>
+                <h2 className="text-2xl font-bold text-akcent mt-2 mb-1 leading-snug">
                   {name}
                 </h2>
               </div>
             </div>
-            <div className="h-10 w-10 flex items-center justify-center">
+            <div className="h-10 w-10 flex items-center justify-center shrink-0">
               {canSwipeRight ? (
                 <ArrowRight
-                  className={`h-10 w-10 ${loadingProduct ? "opacity-40 cursor-not-allowed" : "text-akcent cursor-pointer"}`}
+                  className={`h-8 w-8 ${loadingProduct ? "opacity-40 cursor-not-allowed" : "text-akcent/60 cursor-pointer hover:text-akcent transition-colors"}`}
                   onClick={() =>
                     !loadingProduct &&
                     canSwipeRight &&
@@ -164,27 +164,27 @@ export const Game: React.FC = () => {
                 value={guess}
                 onChange={(e) => setGuess(e.target.value)}
                 placeholder="0.00"
-                className="flex-1 min-w-0 bg-white border-2 border-glowny rounded-2xl px-6 py-4 text-xl font-bold focus:outline-none focus:border-glowny transition-colors shadow-inner"
+                className="flex-1 min-w-0 bg-tlo border border-border rounded-xl px-5 py-3.5 text-xl font-semibold text-akcent placeholder:text-akcent/30 focus:outline-none focus:border-glowny focus:ring-2 focus:ring-glowny/20 transition-colors"
               />
               <button
                 type="submit"
-                className="w-full sm:w-auto bg-glowny hover:bg-glowny text-white font-bold py-4 px-6 sm:px-8 rounded-2xl shadow-lg shadow-glowny transition-all active:scale-95"
+                className="w-full sm:w-auto bg-glowny hover:bg-glowny-hover text-white font-semibold py-3.5 px-6 sm:px-8 rounded-xl transition-colors"
               >
-                STRZAŁ
+                Strzał
               </button>
             </form>
           ) : hasWon ? (
-            <div className="w-full rounded-2xl border border-glowny bg-green -50 px-6 py-4 text-center text-sm font-semibold text-glowny">
+            <div className="w-full rounded-xl border border-glowny/40 bg-green-50 px-6 py-4 text-center text-sm font-medium text-akcent">
               Gratulacje! Zgadłeś produkt!
             </div>
           ) : (
-            <div className="w-full rounded-2xl border border-red-300 bg-red-50 px-6 py-4 text-center text-sm font-semibold text-red-700">
+            <div className="w-full rounded-xl border border-red-200 bg-red-50 px-6 py-4 text-center text-sm font-medium text-red-800">
               Niestety, nie tym razem!
             </div>
           )}
 
           {errorMessage && (
-            <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
               {errorMessage}
             </div>
           )}
@@ -201,13 +201,13 @@ export const Game: React.FC = () => {
 
           <AttemptsBoard attempts={currentAttempts} />
 
-          <div className="mt-6 text-center text-sm text-slate-500 space-y-2">
+          <div className="mt-6 text-center text-sm text-akcent/50 space-y-2">
             <p className="space-x-2">
               <a
                 href="/Polityka_prywatnosci.pdf"
                 target="_blank"
                 rel="noreferrer"
-                className="underline transition hover:text-glowny"
+                className="underline underline-offset-2 transition hover:text-glowny"
               >
                 Polityka prywatności
               </a>
@@ -216,14 +216,14 @@ export const Game: React.FC = () => {
                 href="/Regulamin.pdf"
                 target="_blank"
                 rel="noreferrer"
-                className="underline transition hover:text-glowny"
+                className="underline underline-offset-2 transition hover:text-glowny"
               >
                 Regulamin
               </a>
               <span>·</span>
               <a
                 href="mailto:snap.rescue00@gmail.com"
-                className="underline transition hover:text-glowny"
+                className="underline underline-offset-2 transition hover:text-glowny"
               >
                 Zgłoś błąd
               </a>

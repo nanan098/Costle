@@ -11,9 +11,9 @@ export const directionalLabel = (
 } => {
   const colorClass =
     attempt.status === "yellow"
-      ? "text-yellow-500"
+      ? "text-amber-600"
       : attempt.status === "red"
-        ? "text-red-500"
+        ? "text-red-600"
         : "text-glowny";
 
   if (attempt.status === "green") {

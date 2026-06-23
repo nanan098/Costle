@@ -1,3 +1,8 @@
+require("dotenv").config();
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config({ path: ".env.local", override: true });
+}
+
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -12,11 +17,16 @@ const { szyfrujToken, odszyfrujToken } = require("./jwt");
 
 app.use(express.json({ limit: "10kb" }));
 app.use(helmet());
+const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: "https://costle.vercel.app", // Pozwól na żądania tylko z Twojego frontendu
-    methods: ["GET", "POST"], // Określ dozwolone metody
-    allowedHeaders: ["Content-Type"], // I nagłówki
+    origin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins,
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
   }),
 );
 app.set("trust proxy", 1);
@@ -170,5 +180,5 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Backend działa na porcie ${PORT}`));

@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
+import { API_URL } from "../config/api";
 
 /**
  * Fetch product metadata from the backend for the selected date.
@@ -24,7 +25,7 @@ export const getProduct = async (
   setErrorMessage(null);
 
   try {
-    const response = await fetch("https://costle.onrender.com/api/product", {
+    const response = await fetch(`${API_URL}/product`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

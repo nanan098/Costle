@@ -1,5 +1,7 @@
 require("dotenv").config();
-if (process.env.NODE_ENV !== "production") {
+
+// Tylko lokalny dev (npm run dev / docker-compose) — nigdy w produkcji na Renderze
+if (process.env.NODE_ENV === "development") {
   require("dotenv").config({ path: ".env.local", override: true });
 }
 

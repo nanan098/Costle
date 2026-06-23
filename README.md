@@ -97,7 +97,7 @@ docker compose up --build
 ```bash
 cd backend
 npm install
-npm start
+npm run dev
 ```
 
 2. Frontend:
@@ -117,7 +117,10 @@ npm run dev
 
 - Upewnij się, że MongoDB jest dostępne i kolekcja `Products` zawiera dokumenty z polami `category`, `releaseDate` oraz `price`.
 - Tokeny gry wygaśnię po 5 minutach, co pomaga zabezpieczyć stan gry.
-- Na Renderze ustaw `CORS_ORIGIN=https://costle.vercel.app`. Lokalnie backend ładuje `backend/.env.local` z `CORS_ORIGIN=http://localhost:5173`.
+- Na Renderze (Docker) ustaw w panelu **Environment**:
+  - `DATABASE_URL`, `ENCRYPTION_KEY`, `CORS_ORIGIN=https://costle.vercel.app`
+  - Pliki `.env` / `.env.local` **nie trafiają** do obrazu Dockera — tylko zmienne z panelu Render.
+- Lokalnie: `npm run dev` w `backend/` lub `docker compose up`.
 
 ## Link do projektu / demo
 
